@@ -1,0 +1,33 @@
+{
+  "Grant Table": {
+    "Type": "Task",
+    "Next": "Athena CTAS",
+    "Parameters": {
+      "Permissions": [
+        "DESCRIBE",
+        "SELECT"
+      ],
+      "Principal": {
+        "DataLakePrincipalIdentifier": "arn:aws:iam::767397793707:role/service-role/StepFunctions-purchase-test-role-jgcj9128l"
+      },
+      "Resource": {
+        "Table": {
+          "DatabaseName.$": "$.database",
+          "TableWildcard": {}
+        }
+      }
+    },
+    "Resource": "arn:aws:states:::aws-sdk:lakeformation:grantPermissions",
+    "ResultPath": null,
+    "Catch": [
+      {
+        "ErrorEquals": [
+          "States.ALL"
+        ],
+        "Comment": "catch all",
+        "Next": "Fallback Revoke",
+        "ResultPath": "$.Error"
+      }
+    ]
+  }
+}

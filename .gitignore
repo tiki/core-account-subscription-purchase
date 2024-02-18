@@ -1,0 +1,14 @@
+# Fuckin Macs
+.DS_Store
+
+# IntelliJ
+.idea
+*.iml
+
+# AWS
+.aws-sam
+packaged.yaml
+packaged.yml
+
+# Compiled Outputs
+out/

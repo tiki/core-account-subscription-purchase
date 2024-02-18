@@ -1,0 +1,22 @@
+{
+  "Athena Result": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::athena:getQueryResults",
+    "Parameters": {
+      "MaxResults": 10,
+      "QueryExecutionId.$": "$.Count.QueryExecution.QueryExecutionId"
+    },
+    "ResultPath": "$.Result",
+    "Next": "Revoke Permissions",
+    "Catch": [
+      {
+        "ErrorEquals": [
+          "States.ALL"
+        ],
+        "Comment": "catch all",
+        "Next": "Fallback Revoke",
+        "ResultPath": "$.Error"
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "Grant Location": {
+    "Type": "Task",
+    "Next": "Grant Database",
+    "Parameters": {
+      "Permissions": [
+        "DATA_LOCATION_ACCESS"
+      ],
+      "Principal": {
+        "DataLakePrincipalIdentifier": "arn:aws:iam::767397793707:role/service-role/StepFunctions-purchase-test-role-jgcj9128l"
+      },
+      "Resource": {
+        "DataLocation": {
+          "ResourceArn.$": "States.Format('arn:aws:s3:::mytiki-athena-results-sandbox-mike/cleanroom/{}', $.database)"
+        }
+      }
+    },
+    "Resource": "arn:aws:states:::aws-sdk:lakeformation:grantPermissions",
+    "ResultPath": null,
+    "Catch": [
+      {
+        "ErrorEquals": [
+          "States.ALL"
+        ],
+        "Comment": "catch all",
+        "Next": "Format Error",
+        "ResultPath": "$.Error"
+      }
+    ]
+  }
+}

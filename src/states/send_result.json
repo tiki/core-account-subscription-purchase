@@ -1,0 +1,30 @@
+{
+  "Send Result": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::http:invoke",
+    "Parameters": {
+      "ApiEndpoint": "https://account.mytiki.com/api/latest/ocean/purchase",
+      "Method": "POST",
+      "Authentication": {
+        "ConnectionArn": "arn:aws:events:us-east-2:767397793707:connection/core-account-sf/53ee0d8b-4941-4a00-9dae-8a0cd78cc54a"
+      },
+      "RequestBody": {
+        "requestId.$": "$.requestId",
+        "count.$": "$.count"
+      }
+    },
+    "Retry": [
+      {
+        "ErrorEquals": [
+          "States.ALL"
+        ],
+        "BackoffRate": 2,
+        "IntervalSeconds": 1,
+        "MaxAttempts": 3,
+        "JitterStrategy": "FULL"
+      }
+    ],
+    "ResultPath": null,
+    "End": true
+  }
+}

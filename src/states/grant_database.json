@@ -1,0 +1,32 @@
+{
+  "Grant Database": {
+    "Type": "Task",
+    "Next": "Grant Table",
+    "Parameters": {
+      "Permissions": [
+        "DESCRIBE",
+        "CREATE_TABLE"
+      ],
+      "Principal": {
+        "DataLakePrincipalIdentifier": "arn:aws:iam::767397793707:role/service-role/StepFunctions-purchase-test-role-jgcj9128l"
+      },
+      "Resource": {
+        "Database": {
+          "Name.$": "$.database"
+        }
+      }
+    },
+    "Resource": "arn:aws:states:::aws-sdk:lakeformation:grantPermissions",
+    "ResultPath": null,
+    "Catch": [
+      {
+        "ErrorEquals": [
+          "States.ALL"
+        ],
+        "Comment": "catch all",
+        "Next": "Fallback Revoke",
+        "ResultPath": "$.Error"
+      }
+    ]
+  }
+}

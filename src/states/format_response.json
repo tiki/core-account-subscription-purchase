@@ -1,0 +1,10 @@
+{
+  "Format Response": {
+    "Type": "Pass",
+    "Parameters": {
+      "requestId.$": "$.requestId",
+      "count.$": "$.Result.ResultSet.Rows[1].Data[0].VarCharValue"
+    },
+    "Next": "Send Result"
+  }
+}

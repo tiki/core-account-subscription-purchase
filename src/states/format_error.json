@@ -1,0 +1,13 @@
+{
+  "Format Error": {
+    "Type": "Pass",
+    "Next": "Send Error",
+    "Parameters": {
+      "requestId.$": "$.requestId",
+      "error": {
+        "message.$": "$.Error.Error",
+        "cause.$": "$.Error.Cause"
+      }
+    }
+  }
+}
