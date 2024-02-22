@@ -14,7 +14,7 @@
           "States.ALL"
         ],
         "Comment": "catch all",
-        "Next": "Fallback Revoke",
+        "Next": "FallbackRevoke",
         "ResultPath": "$.Error"
       }
     ]

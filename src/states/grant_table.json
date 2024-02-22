@@ -1,5 +1,5 @@
 {
-  "Grant Table": {
+  "GrantTable": {
     "Type": "Task",
     "Next": "AthenaCTAS",
     "Parameters": {
