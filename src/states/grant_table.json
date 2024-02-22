@@ -1,14 +1,14 @@
 {
   "Grant Table": {
     "Type": "Task",
-    "Next": "Athena CTAS",
+    "Next": "AthenaCTAS",
     "Parameters": {
       "Permissions": [
         "DESCRIBE",
         "SELECT"
       ],
       "Principal": {
-        "DataLakePrincipalIdentifier": "arn:aws:iam::767397793707:role/service-role/StepFunctions-purchase-test-role-jgcj9128l"
+        "DataLakePrincipalIdentifier": "${machine_role}"
       },
       "Resource": {
         "Table": {
@@ -25,7 +25,7 @@
           "States.ALL"
         ],
         "Comment": "catch all",
-        "Next": "Fallback Revoke",
+        "Next": "FallbackRevoke",
         "ResultPath": "$.Error"
       }
     ]

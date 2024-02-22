@@ -1,5 +1,5 @@
 {
-  "Revoke Permissions": {
+  "RevokePermissions": {
     "Type": "Task",
     "Parameters": {
       "Entries": [
@@ -9,11 +9,11 @@
             "DATA_LOCATION_ACCESS"
           ],
           "Principal": {
-            "DataLakePrincipalIdentifier": "arn:aws:iam::767397793707:role/service-role/StepFunctions-purchase-test-role-jgcj9128l"
+            "DataLakePrincipalIdentifier": "${machine_role}"
           },
           "Resource": {
             "DataLocation": {
-              "ResourceArn.$": "States.Format('arn:aws:s3:::mytiki-athena-results-sandbox-mike/cleanroom/{}', $.database)"
+              "ResourceArn.$": "States.Format('arn:aws:s3:::${cleanroom_bucket}/cleanroom/{}', $.database)"
             }
           }
         },
@@ -24,7 +24,7 @@
             "CREATE_TABLE"
           ],
           "Principal": {
-            "DataLakePrincipalIdentifier": "arn:aws:iam::767397793707:role/service-role/StepFunctions-purchase-test-role-jgcj9128l"
+            "DataLakePrincipalIdentifier": "${machine_role}"
           },
           "Resource": {
             "Database": {
@@ -39,7 +39,7 @@
             "SELECT"
           ],
           "Principal": {
-            "DataLakePrincipalIdentifier": "arn:aws:iam::767397793707:role/service-role/StepFunctions-purchase-test-role-jgcj9128l"
+            "DataLakePrincipalIdentifier": "${machine_role}"
           },
           "Resource": {
             "Table": {
@@ -52,6 +52,6 @@
     },
     "Resource": "arn:aws:states:::aws-sdk:lakeformation:batchRevokePermissions",
     "ResultPath": null,
-    "Next": "Format Response"
+    "Next": "FormatResponse"
   }
 }

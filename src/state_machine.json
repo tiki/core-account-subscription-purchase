@@ -1,5 +1,5 @@
 {
   "Comment": "A description of my state machine",
-  "StartAt": "Grant Location",
+  "StartAt": "GrantLocation",
   "States": {}
 }

@@ -1,5 +1,5 @@
 {
-  "Athena Result": {
+  "AthenaResult": {
     "Type": "Task",
     "Resource": "arn:aws:states:::athena:getQueryResults",
     "Parameters": {
@@ -7,7 +7,7 @@
       "QueryExecutionId.$": "$.Count.QueryExecution.QueryExecutionId"
     },
     "ResultPath": "$.Result",
-    "Next": "Revoke Permissions",
+    "Next": "RevokePermissions",
     "Catch": [
       {
         "ErrorEquals": [
