@@ -7,7 +7,7 @@ Request (JSON)
 - **requestId**: A unique identifier (uuid) for the transaction.
 - **database**: The unique identifier for the cleanroom, follow database naming conventions —lowercase snakecase. Must start with a letter, not a number or symbol. 
 - **table**: The unique identifier for the table to create, follow database naming conventions —lowercase snakecase. Must start with a letter, not a number or symbol.
-- **query**: The create table as query to load the table.
+- **query**: The filter query to load into the newly created table.
 
 
 ```json
