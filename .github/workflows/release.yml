@@ -39,7 +39,7 @@ jobs:
       - name: AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/deploy-core-account-subscription-estimate
+          role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/deploy-core-account-subscription-purchase
           role-session-name: ${{ vars.SESSION_NAME }}
           aws-region: ${{ vars.AWS_REGION }}
 
