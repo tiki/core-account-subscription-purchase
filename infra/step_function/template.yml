@@ -22,6 +22,13 @@ Parameters:
   ApiAuthorization:
     Description: The EventBridge connection id (i.e. name/id)
     Type: String
+  OceanAccount:
+    Description: Account ID for the ocean catalog
+    Type: String
+  OceanDatabase:
+    Description: The database name within the ocean catalog. Requires a resource link.
+    Type: String
+    Default: tiki
 
 Resources:
   StateMachine:
@@ -102,7 +109,9 @@ Resources:
                 Action:
                   - secretsmanager:GetSecretValue
                   - secretsmanager:DescribeSecret
-                Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:events!connection/${ApiAuthorization}
+                Resource: !Sub
+                  - arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:events!connection/${ApiAuthorizationName}/*
+                  - ApiAuthorizationName: !Select [ 0, !Split [ "/" , !Ref ApiAuthorization ] ]
               - Effect: Allow
                 Action: states:InvokeHTTPEndpoint
                 Resource: !Sub arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:*
@@ -149,6 +158,10 @@ Resources:
                   - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/*
                   - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/*
                   - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/*
+                  - !Sub arn:aws:glue:${AWS::Region}:${OceanAccount}:catalog
+                  - !Sub arn:aws:glue:${AWS::Region}:${OceanAccount}:database/*
+                  - !Sub arn:aws:glue:${AWS::Region}:${OceanAccount}:table/*
+                  - !Sub arn:aws:glue:${AWS::Region}:${OceanAccount}:userDefinedFunction/*
                 Action:
                   - glue:GetDatabase
                   - glue:GetDatabases
@@ -175,4 +188,65 @@ Resources:
             Statement:
               - Effect: Allow
                 Resource: "*"
-                Action: lakeformation:GetDataAccess
+                Action:
+                  - lakeformation:GetDataAccess
+                  - lakeformation:RegisterResource
+                  - lakeformation:DeregisterResource
+                  - lakeformation:GrantPermissions
+                  - lakeformation:BatchGrantPermissions
+                  - lakeformation:RevokePermissions
+                  - lakeformation:BatchRevokePermissions
+  Admin:
+    Type: AWS::LakeFormation::DataLakeSettings
+    Properties:
+      Admins:
+        - DataLakePrincipalIdentifier: !GetAtt Role.Arn
+
+  PermissionDbRl:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt Role.Arn
+      Permissions:
+        - DESCRIBE
+      Resource:
+        DatabaseResource:
+          CatalogId: !Ref AWS::AccountId
+          Name: !Ref OceanDatabase
+  PermissionDb:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt Role.Arn
+      Permissions:
+        - DESCRIBE
+      Resource:
+        DatabaseResource:
+          CatalogId: !Ref OceanAccount
+          Name: !Ref OceanDatabase
+  PermissionTbRl:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt Role.Arn
+      Permissions:
+        - DESCRIBE
+        - SELECT
+      Resource:
+        TableResource:
+          CatalogId: !Ref AWS::AccountId
+          DatabaseName: !Ref OceanDatabase
+          TableWildcard: { }
+  PermissionTb:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt Role.Arn
+      Permissions:
+        - DESCRIBE
+        - SELECT
+      Resource:
+        TableResource:
+          CatalogId: !Ref OceanAccount
+          DatabaseName: !Ref OceanDatabase
+          TableWildcard: { }
