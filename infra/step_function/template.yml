@@ -196,14 +196,21 @@ Resources:
                   - lakeformation:BatchGrantPermissions
                   - lakeformation:RevokePermissions
                   - lakeformation:BatchRevokePermissions
-  Admin:
+
+  AdminSf:
     Type: AWS::LakeFormation::DataLakeSettings
     Properties:
       Admins:
         - DataLakePrincipalIdentifier: !GetAtt Role.Arn
+  AdminDeploy:
+    Type: AWS::LakeFormation::DataLakeSettings
+    Properties:
+      Admins:
+        - DataLakePrincipalIdentifier: !Sub arn:aws:iam::${AWS::AccountId}:role/deploy-${Name}
 
   PermissionDbRl:
     Type: AWS::LakeFormation::Permissions
+    DependsOn: AdminDeploy
     Properties:
       DataLakePrincipal:
         DataLakePrincipalIdentifier: !GetAtt Role.Arn
@@ -215,6 +222,7 @@ Resources:
           Name: !Ref OceanDatabase
   PermissionDb:
     Type: AWS::LakeFormation::Permissions
+    DependsOn: AdminDeploy
     Properties:
       DataLakePrincipal:
         DataLakePrincipalIdentifier: !GetAtt Role.Arn
@@ -226,6 +234,7 @@ Resources:
           Name: !Ref OceanDatabase
   PermissionTbRl:
     Type: AWS::LakeFormation::Permissions
+    DependsOn: AdminDeploy
     Properties:
       DataLakePrincipal:
         DataLakePrincipalIdentifier: !GetAtt Role.Arn
@@ -239,6 +248,7 @@ Resources:
           TableWildcard: { }
   PermissionTb:
     Type: AWS::LakeFormation::Permissions
+    DependsOn: AdminDeploy
     Properties:
       DataLakePrincipal:
         DataLakePrincipalIdentifier: !GetAtt Role.Arn
