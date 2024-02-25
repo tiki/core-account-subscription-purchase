@@ -1,0 +1,22 @@
+{
+  "AthenaDrop": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+    "Parameters": {
+      "QueryString.$": "States.Format('DROP TABLE {}.{}', $.database, $.table)",
+      "WorkGroup": "primary"
+    },
+    "Next": "FallbackRevoke",
+    "ResultPath": "$.Create",
+    "Catch": [
+      {
+        "ErrorEquals": [
+          "States.ALL"
+        ],
+        "Comment": "catch all",
+        "ResultPath": "$.Error",
+        "Next": "FallbackRevoke"
+      }
+    ]
+  }
+}

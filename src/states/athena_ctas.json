@@ -1,0 +1,22 @@
+{
+  "AthenaCTAS": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+    "Parameters": {
+      "QueryString.$": "States.Format('CREATE TABLE {}.{} WITH ( table_type = \\'ICEBERG\\', is_external = false, format = \\'PARQUET\\', location = \\'s3://${cleanroom_bucket}/cleanroom/{}/{}/\\') AS ({})', $.database, $.table, $.database, $.table, $.query)",
+      "WorkGroup": "${athena_workgroup}"
+    },
+    "Next": "AthenaCount",
+    "ResultPath": "$.Create",
+    "Catch": [
+      {
+        "ErrorEquals": [
+          "States.ALL"
+        ],
+        "Comment": "catch all",
+        "ResultPath": "$.Error",
+        "Next": "FallbackRevoke"
+      }
+    ]
+  }
+}

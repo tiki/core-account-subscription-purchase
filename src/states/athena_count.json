@@ -1,0 +1,22 @@
+{
+  "AthenaCount": {
+    "Type": "Task",
+    "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+    "Parameters": {
+      "QueryString.$": "States.Format('SELECT count(*) FROM {}.{}', $.database, $.table)",
+      "WorkGroup": "${athena_workgroup}"
+    },
+    "Next": "AthenaResult",
+    "ResultPath": "$.Count",
+    "Catch": [
+      {
+        "ErrorEquals": [
+          "States.ALL"
+        ],
+        "Comment": "catch all",
+        "Next": "AthenaDrop",
+        "ResultPath": "$.Error"
+      }
+    ]
+  }
+}

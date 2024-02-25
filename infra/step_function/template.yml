@@ -1,0 +1,252 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Core Account Subscription Purchase
+
+Parameters:
+  Name:
+    Description: The service name (lowercase pipecase)
+    Type: String
+    Default: core-account-subscription-purchase
+  Workgroup:
+    Description: The athena workgroup to use
+    Type: String
+    Default: primary
+  Bucket:
+    Description: The bucket to host the cleanroom
+    Type: String
+    Default: mytiki-ocean
+  ApiEndpoint:
+    Description: The base http endpoint to receive the result (without https:// prefix)
+    Type: String
+    Default: account.mytiki.com
+  ApiAuthorization:
+    Description: The EventBridge connection id (i.e. name/id)
+    Type: String
+  OceanAccount:
+    Description: Account ID for the ocean catalog
+    Type: String
+  OceanDatabase:
+    Description: The database name within the ocean catalog. Requires a resource link.
+    Type: String
+    Default: tiki
+
+Resources:
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Ref Name
+      Type: STANDARD
+      Role: !GetAtt Role.Arn
+      DefinitionUri: ../../out/state_machine.json
+      DefinitionSubstitutions:
+        athena_workgroup: !Ref Workgroup
+        cleanroom_bucket: !Ref Bucket
+        api_endpoint: !Ref ApiEndpoint
+        api_authorization: !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:connection/${ApiAuthorization}
+        machine_role: !GetAtt Role.Arn
+      Tracing:
+        Enabled: true
+      Logging:
+        Level: ERROR
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt LogGroup.Arn
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Ref Name
+      RetentionInDays: 30
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref Name
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - states.amazonaws.com
+      Policies:
+        - PolicyName: XRay
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: "*"
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                  - xray:GetSamplingRules
+                  - xray:GetSamplingTargets
+        - PolicyName: CloudWatch
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: "*"
+                Action:
+                  - logs:CreateLogDelivery
+                  - logs:CreateLogStream
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutLogEvents
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+        - PolicyName: Http
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: events:RetrieveConnectionCredentials
+                Resource: !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:connection/${ApiAuthorization}
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Resource: !Sub
+                  - arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:events!connection/${ApiAuthorizationName}/*
+                  - ApiAuthorizationName: !Select [ 0, !Split [ "/" , !Ref ApiAuthorization ] ]
+              - Effect: Allow
+                Action: states:InvokeHTTPEndpoint
+                Resource: !Sub arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:*
+                Condition:
+                  StringLike:
+                    states:HTTPEndpoint: !Sub https://${ApiEndpoint}/*
+                    states:HTTPMethod: POST
+        - PolicyName: Athena
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - athena:startQueryExecution
+                  - athena:stopQueryExecution
+                  - athena:getQueryExecution
+                  - athena:getDataCatalog
+                  - athena:getQueryResults
+                Resource:
+                  - !Sub arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/*
+                  - !Sub arn:aws:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/*
+        - PolicyName: S3
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: arn:aws:s3:::*
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - s3:ListMultipartUploadParts
+                  - s3:AbortMultipartUpload
+                  - s3:CreateBucket
+                  - s3:PutObject
+        - PolicyName: Glue
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource:
+                  - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
+                  - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/*
+                  - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/*
+                  - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/*
+                  - !Sub arn:aws:glue:${AWS::Region}:${OceanAccount}:catalog
+                  - !Sub arn:aws:glue:${AWS::Region}:${OceanAccount}:database/*
+                  - !Sub arn:aws:glue:${AWS::Region}:${OceanAccount}:table/*
+                  - !Sub arn:aws:glue:${AWS::Region}:${OceanAccount}:userDefinedFunction/*
+                Action:
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:CreateDatabase
+                  - glue:UpdateDatabase
+                  - glue:DeleteDatabase
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:CreateTable
+                  - glue:UpdateTable
+                  - glue:DeleteTable
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:CreatePartition
+                  - glue:UpdatePartition
+                  - glue:DeletePartition
+                  - glue:BatchDeleteTable
+                  - glue:BatchGetPartition
+                  - glue:BatchCreatePartition
+                  - glue:BatchDeletePartition
+        - PolicyName: LakeFormation
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: "*"
+                Action:
+                  - lakeformation:GetDataAccess
+                  - lakeformation:RegisterResource
+                  - lakeformation:DeregisterResource
+                  - lakeformation:GrantPermissions
+                  - lakeformation:BatchGrantPermissions
+                  - lakeformation:RevokePermissions
+                  - lakeformation:BatchRevokePermissions
+  Admin:
+    Type: AWS::LakeFormation::DataLakeSettings
+    Properties:
+      Admins:
+        - DataLakePrincipalIdentifier: !GetAtt Role.Arn
+
+  PermissionDbRl:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt Role.Arn
+      Permissions:
+        - DESCRIBE
+      Resource:
+        DatabaseResource:
+          CatalogId: !Ref AWS::AccountId
+          Name: !Ref OceanDatabase
+  PermissionDb:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt Role.Arn
+      Permissions:
+        - DESCRIBE
+      Resource:
+        DatabaseResource:
+          CatalogId: !Ref OceanAccount
+          Name: !Ref OceanDatabase
+  PermissionTbRl:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt Role.Arn
+      Permissions:
+        - DESCRIBE
+        - SELECT
+      Resource:
+        TableResource:
+          CatalogId: !Ref AWS::AccountId
+          DatabaseName: !Ref OceanDatabase
+          TableWildcard: { }
+  PermissionTb:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt Role.Arn
+      Permissions:
+        - DESCRIBE
+        - SELECT
+      Resource:
+        TableResource:
+          CatalogId: !Ref OceanAccount
+          DatabaseName: !Ref OceanDatabase
+          TableWildcard: { }

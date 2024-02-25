@@ -1,0 +1,57 @@
+{
+  "FallbackRevoke": {
+    "Type": "Task",
+    "Parameters": {
+      "Entries": [
+        {
+          "Id.$": "States.UUID()",
+          "Permissions": [
+            "DATA_LOCATION_ACCESS"
+          ],
+          "Principal": {
+            "DataLakePrincipalIdentifier": "${machine_role}"
+          },
+          "Resource": {
+            "DataLocation": {
+              "ResourceArn.$": "States.Format('arn:aws:s3:::${cleanroom_bucket}/cleanroom/{}', $.database)"
+            }
+          }
+        },
+        {
+          "Id.$": "States.UUID()",
+          "Permissions": [
+            "DESCRIBE",
+            "CREATE_TABLE"
+          ],
+          "Principal": {
+            "DataLakePrincipalIdentifier": "arn:aws:iam::767397793707:role/service-role/StepFunctions-purchase-test-role-jgcj9128l"
+          },
+          "Resource": {
+            "Database": {
+              "Name.$": "$.database"
+            }
+          }
+        },
+        {
+          "Id.$": "States.UUID()",
+          "Permissions": [
+            "DESCRIBE",
+            "SELECT"
+          ],
+          "Principal": {
+            "DataLakePrincipalIdentifier": "arn:aws:iam::767397793707:role/service-role/StepFunctions-purchase-test-role-jgcj9128l"
+          },
+          "Resource": {
+            "Table": {
+              "DatabaseName.$": "$.database",
+              "TableWildcard": {}
+            }
+          }
+        }
+      ]
+    },
+    "Resource": "arn:aws:states:::aws-sdk:lakeformation:batchRevokePermissions",
+    "ResultPath": null,
+    "Next": "FormatError"
+  }
+}

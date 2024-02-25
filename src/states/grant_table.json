@@ -1,0 +1,33 @@
+{
+  "GrantTable": {
+    "Type": "Task",
+    "Next": "AthenaCTAS",
+    "Parameters": {
+      "Permissions": [
+        "DESCRIBE",
+        "SELECT"
+      ],
+      "Principal": {
+        "DataLakePrincipalIdentifier": "${machine_role}"
+      },
+      "Resource": {
+        "Table": {
+          "DatabaseName.$": "$.database",
+          "TableWildcard": {}
+        }
+      }
+    },
+    "Resource": "arn:aws:states:::aws-sdk:lakeformation:grantPermissions",
+    "ResultPath": null,
+    "Catch": [
+      {
+        "ErrorEquals": [
+          "States.ALL"
+        ],
+        "Comment": "catch all",
+        "Next": "FallbackRevoke",
+        "ResultPath": "$.Error"
+      }
+    ]
+  }
+}
