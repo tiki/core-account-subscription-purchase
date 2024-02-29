@@ -3,7 +3,7 @@
     "Type": "Task",
     "Resource": "arn:aws:states:::http:invoke",
     "Parameters": {
-      "ApiEndpoint": "https://${api_endpoint}/api/latest/ocean/purchase",
+      "ApiEndpoint": "https://${api_endpoint}/api/latest/event/subscription/purchase",
       "Method": "POST",
       "Authentication": {
         "ConnectionArn": "${api_authorization}"

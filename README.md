@@ -19,7 +19,19 @@ Request (JSON)
 }
 ```
 
-Response (JSON)
+Response (JSON) - `/api/latest/ocean/subscription/purchase`
+
+- **requestId**: The unique identifier for the transaction.
+- **count**: The total number of rows loaded.
+
+```json
+{
+  "requestId": "string",
+  "count": "number"
+}
+```
+
+Response (JSON) - `/api/latest/ocean/error`
 
 - **requestId**: The unique identifier for the transaction.
 - **error**: An optional error if the transaction failed.
